@@ -1,0 +1,28 @@
+with cte_dates (tt,prt,user_id) as (
+select 
+    l.logon_time as tt, 
+    (l.logoff_time - l.logon_time)*24 as prt,
+     l.user_id
+from 
+    LOGIN_LOG l
+
+union all
+
+select  
+    (tt + 1) as tt, 
+    case 
+      when trunc(l.logoff_time) = trunc(tt+1) then
+      prt+(l.logoff_time - tt)*24
+      else
+        666
+      end as prt,
+    l.user_id
+from 
+    cte_dates c,
+    LOGIN_LOG l
+where c.tt < last_day(to_date('01.01.2017', 'DD.MM.YYYY'))
+and trunc(l.logon_time) = c.tt)
+
+select *
+from cte_dates t
+order by tt ;
