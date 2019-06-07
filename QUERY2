@@ -1,0 +1,19 @@
+with cte_dates (cte_date) as ( 
+    select to_date('01.01.2017', 'DD.MM.YYYY') as  cte_date from dual
+    union all
+    select  (cte_date + 1) as cte_date
+    from cte_dates
+    where cte_date < last_day(to_date('01.01.2017', 'DD.MM.YYYY'))
+    )
+select c.cte_date, 
+       case
+  when trunc(l.logoff_time) = trunc(l.logon_time) then
+    sum(l.logoff_time-l.logon_time) over (partition by l.user_id, trunc(l.logon_time))*24 
+      else
+         sum(trunc(l.logon_time+1)-l.logon_time) over (partition by l.user_id, trunc(l.logon_time))*24 
+    end as prt,
+    l.user_id
+from cte_dates c, 
+     LOGIN_LOG l
+     where trunc(l.logon_time) = c.cte_date
+order by cte_date ;
